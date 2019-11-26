@@ -6,6 +6,7 @@ int random_partition(int A[], int p, int r);
 void exchange(int* a, int* b);
 int median_of_medians(int A[], int p, int r);
 void insertion_sort(int A[], int from, int to);
+int median_5(int A[], int left, int right);
 
 int quick_select(int A[], int p, int r, int rank) {
     if (p == r) {
@@ -13,6 +14,7 @@ int quick_select(int A[], int p, int r, int rank) {
     }
     int q = random_partition(A, p, r);
     int k = q - p + 1;
+    printf("k: %d\n", k);
     if (rank == k) {
         return A[q];
     } else if (k < rank) {
@@ -23,8 +25,7 @@ int quick_select(int A[], int p, int r, int rank) {
 }
 
 int random_partition(int A[], int p, int r) {
-    int median = median_of_medians(A, p, r);
-    int ind = 0;
+    int ind = median_of_medians(A, p, r);
     exchange(&A[ind], &A[r]);
     int x = A[r];
     int i = p - 1;
@@ -35,6 +36,7 @@ int random_partition(int A[], int p, int r) {
         }
     }
     exchange(&A[i + 1], &A[r]);
+    return i + 1;
 }
 
 void exchange(int* a, int* b) {
@@ -44,28 +46,64 @@ void exchange(int* a, int* b) {
 }
 
 int median_of_medians(int A[], int p, int r) {
-    int n = r / 5;
-    int C[n];
-    for (int i = 0; i < n; i++) {
-        int B[5];
-        int s = p + (5 * i);
-        int e = floor(s + 5, p + r - 1);
-        for (int j = s; j <= e; j++) {
-            B[j - s] = A[j];
-        }
-        insertion_sort(B, 0, e - s);
-        C[i] = (e - s) % 2 == 0 ? (e - s / 2) : (e - s / 2) + 1;
+    if (r - p < 5) {
+        printf("finished\n");
+        return median_5(A, p, r);
     }
-    int z = n % 2 == 0 ? n / 2 : n / 2 + 1;
-    return quick_select(C, 0, n, z);
+
+    printf("P: %d\n", p);
+    //int n = ceil(r - p + 1 / 5);
+    for (int i = p; i < r; i += 5) {
+        int right = i + 4;
+        if (right > r)
+            right = r;
+        printf("i: %d, right: %d\n", i, right);
+        int med5 = median_5(A, i, right);
+        int index2 = p + ((i - p) / 5);
+        printf("median: %d, index2: %d\n", med5, index2);
+        exchange(&A[med5], &A[index2]);
+        // printf("hello5\n");
+    }
+    //int z = n % 2 == 0 ? (n / 2) - 1 : n / 2;
+    //int n = r - p + 1;
+    //int z = n % 2 == 0 ? (n / 2) : n / 2 + 1;
+    int z = (r - p) / 10 + p + 1;
+    printf("dulo\n");
+    return quick_select(A, p, p + (p - r / 5), z);
+    // return quick_select(C, 0, n - 1, z);
+}
+
+int median_5(int A[], int left, int right) {
+    int n = right - left + 1;
+    //int z = n % 2 == 0 ? (n / 2) : n / 2 + 1;
+    insertion_sort(A, left, right);
+    if (n % 2 == 0)
+        return (int)((left + right) / 2);
+    else
+        return (int)((left + right) / 2 + 1);
+    // return z;
 }
 
 void insertion_sort(int A[], int from, int to) {
     for (int i = from; i < to; i++) {
         for (int j = i + 1; j > from && A[j] < A[j - 1]; j--) {
-            int temp = A[j - 1];
-            A[j - 1] = A[j];
-            A[j] = temp;
+            exchange(&A[j - 1], &A[j]);
         }
+    }
+}
+
+int main() {
+    int t;
+    scanf("%d", &t);
+    for (int i = 0; i < t; i++) {
+        int n;
+        scanf("%d", &n);
+        int A[n];
+        for (int j = 0; j < n; j++)
+            scanf("%d", &A[j]);
+        int c = n / 2 + 1;
+        printf("ceil %d\n", c);
+        int rank = n % 2 == 0 ? (n / 2) : c;
+        printf("Median: %d\n", quick_select(A, 0, n - 1, rank));
     }
 }
